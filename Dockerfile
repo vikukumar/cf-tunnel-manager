@@ -12,7 +12,7 @@ COPY web/ ./
 RUN pnpm run build
 
 # ─── Stage 2: Build Go binary ─────────────────────────────────────────────────
-FROM golang:1.25-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 ARG VERSION=dev
 ARG COMMIT=unknown
