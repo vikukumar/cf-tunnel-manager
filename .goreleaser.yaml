@@ -50,8 +50,6 @@ archives:
         format: zip
     files:
       - README.md
-      - LICENSE
-      - configs/config.yaml
 
 checksum:
   name_template: 'checksums.txt'
@@ -114,17 +112,6 @@ release:
     docker pull ghcr.io/{{ .Env.GITHUB_REPOSITORY }}:{{ .Tag }}
     ```
 
-sboms:
-  - artifacts: archive
+sboms: []
 
-signs:
-  - cmd: cosign
-    certificate: '${artifact}.pem'
-    args:
-      - sign-blob
-      - '--output-certificate=${certificate}'
-      - '--output-signature=${signature}'
-      - '${artifact}'
-      - '--yes'
-    artifacts: checksum
-    output: true
+signs: []
