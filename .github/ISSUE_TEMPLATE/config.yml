@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Documentation
+    url: https://vikukumar.github.io/cf-tunnel-manager/
+    about: Read the full documentation before opening an issue.
+  - name: GitHub Discussions
+    url: https://github.com/vikukumar/cf-tunnel-manager/discussions
+    about: Ask questions and share ideas in GitHub Discussions.
+  - name: Cloudflare Tunnel Docs
+    url: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/
+    about: Official Cloudflare Tunnel documentation.

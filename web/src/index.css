@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-cf-orange: #F6821F;
+  --color-cf-orange-dark: #D4661A;
+  --color-cf-blue: #003682;
+  --color-cf-blue-light: #1560BD;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Base styles */
+body {
+  @apply bg-gray-50 text-gray-900 antialiased;
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark body {
+  @apply bg-gray-950 text-gray-100;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-gray-300 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-gray-400; }
+.dark ::-webkit-scrollbar-thumb { @apply bg-gray-700; }
+.dark ::-webkit-scrollbar-thumb:hover { @apply bg-gray-600; }
+
+/* Animation keyframes */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(246,130,31,0.4); }
+  70%  { box-shadow: 0 0 0 8px rgba(246,130,31,0); }
+  100% { box-shadow: 0 0 0 0 rgba(246,130,31,0); }
+}
+
+.animate-fade-in-up   { animation: fade-in-up   0.35s ease both; }
+.animate-fade-in      { animation: fade-in      0.25s ease both; }
+.animate-slide-right  { animation: slide-in-right 0.3s ease both; }
+.animate-pulse-ring   { animation: pulse-ring 2s infinite; }
+
+/* Drag preview ghost */
+.drag-ghost {
+  opacity: 0.4;
+}
+.drag-over {
+  @apply ring-2 ring-cf-orange;
+}
+
+/* Glassmorphism card (dark mode) */
+.glass-card {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}

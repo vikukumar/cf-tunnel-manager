@@ -1,0 +1,40 @@
+# Cloudflare Tunnel UI  -  Sample Configuration
+# Copy this file to configs/config.yaml and fill in your credentials.
+# Environment variables with the prefix CF_TUNNEL_UI_ override any value here.
+# Example: CF_TUNNEL_UI_CLOUDFLARE_API_TOKEN=... overrides cloudflare.api_token
+
+server:
+  # Address to listen on.
+  host: "0.0.0.0"
+  port: 8080
+  # Enable verbose logging and pretty-print JSON responses.
+  debug: true
+
+cloudflare:
+  # Cloudflare API token with the following permissions:
+  #   Account > Cloudflare Tunnel > Edit
+  #   Account > Zero Trust > Edit
+  #   Zone > DNS > Edit
+  #   Zone > Zone > Read
+  api_token: "<your-cloudflare-api-token>"
+
+  # The Cloudflare account ID that owns your tunnels.
+  account_id: "<your-cloudflare-account-id>"
+
+auth:
+  cloudflare_access:
+    # Set to true to require a valid Cloudflare Access JWT on every request.
+    # When false (dev mode) all requests are allowed and a placeholder user is injected.
+    enabled: false
+
+    # Your Cloudflare Zero Trust team domain (without https://).
+    # Found at Zero Trust -> Settings -> Custom Pages -> Team domain.
+    team_domain: "<your-cloudflare-access-team-domain>"
+
+    # The Application Audience (AUD) tag from your Cloudflare Access application.
+    # Found at Zero Trust -> Access -> Applications -> <your app> -> Overview.
+    audience: "<your-cloudflare-access-application-audience>"
+
+    # Set to true to skip JWT verification entirely (useful for local development
+    # when not behind Cloudflare Access). NEVER set this to true in production.
+    skip_verification: false

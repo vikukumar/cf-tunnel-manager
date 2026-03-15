@@ -1,0 +1,123 @@
+name: Bug Report
+description: File a bug report to help us improve Cloudflare Tunnel UI
+title: "[Bug]: "
+labels: ["bug", "triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please provide as much detail as possible to help us reproduce and fix the issue.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug Summary
+      description: A clear and concise description of what the bug is.
+      placeholder: "When I click on ... the page crashes with ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction Steps
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: A clear and concise description of what actually happened.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What OS are you running the server on?
+      options:
+        - Linux (x86_64)
+        - Linux (arm64)
+        - Linux (armv7)
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Windows
+        - Docker / Container
+        - Kubernetes
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Application Version
+      description: What version of Cloudflare Tunnel UI are you running? (check the startup log or `/api/version`)
+      placeholder: "v1.2.3"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & Version (if UI related)
+      description: e.g. Chrome 124, Firefox 126, Safari 17
+      placeholder: "Chrome 124"
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Method
+      options:
+        - Docker
+        - Docker Compose
+        - Kubernetes
+        - Binary
+        - Built from source
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: |
+        Paste any relevant server logs or browser console errors here.
+        Tip: you can paste the output of `docker logs <container>` or the binary's stdout.
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or configuration snippets that might help diagnose the issue.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I searched existing issues and this is not a duplicate
+          required: true
+        - label: I am using a supported version of the application
+          required: true
+        - label: I have included relevant logs and reproduction steps
+          required: true

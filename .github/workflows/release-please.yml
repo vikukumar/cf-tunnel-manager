@@ -1,0 +1,30 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name:        ${{ steps.rp.outputs.tag_name }}
+      version:         ${{ steps.rp.outputs.version }}
+      major:           ${{ steps.rp.outputs.major }}
+      minor:           ${{ steps.rp.outputs.minor }}
+      patch:           ${{ steps.rp.outputs.patch }}
+
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: rp
+        with:
+          config-file:   release-please-config.json
+          manifest-file: .release-please-manifest.json
+          token:         ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,23 @@
+# CODEOWNERS
+# Each line is a file pattern followed by one or more owners.
+# Order matters — the last matching pattern takes precedence.
+
+# Default: all files
+* @vikukumar
+
+# Frontend
+/web/ @vikukumar
+
+# Backend
+/internal/ @vikukumar
+/cmd/ @vikukumar
+
+# Infrastructure / CI
+/.github/ @vikukumar
+/Dockerfile @vikukumar
+/.goreleaser.yaml @vikukumar
+/Makefile @vikukumar
+
+# Documentation
+/docs/ @vikukumar
+*.md @vikukumar

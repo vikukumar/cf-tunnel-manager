@@ -1,0 +1,130 @@
+version: 2
+
+project_name: cloudflare-tunnel-ui
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: server
+    main: ./cmd/server
+    binary: cloudflare-tunnel-ui
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - '7'
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
+      - goos: darwin
+        goarch: arm
+    ldflags:
+      - -s -w
+      - -X 'github.com/vikukumar/cf-tunnel-manager/internal/version.Version={{.Version}}'
+      - -X 'github.com/vikukumar/cf-tunnel-manager/internal/version.Commit={{.Commit}}'
+      - -X 'github.com/vikukumar/cf-tunnel-manager/internal/version.BuildDate={{.Date}}'
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
+archives:
+  - id: default
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - configs/config.yaml
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - 'merge conflict'
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: '🚀 New Features'
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: '🐛 Bug Fixes'
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: '⚡ Performance'
+      regexp: '^.*?perf(\(.+\))??!?:.+$'
+      order: 2
+    - title: '🔒 Security'
+      regexp: '^.*?sec(\(.+\))??!?:.+$'
+      order: 3
+    - title: '🔧 Maintenance'
+      order: 999
+
+release:
+  github:
+    owner: '{{ .Env.GITHUB_REPOSITORY_OWNER }}'
+    name: cloudflare-tunnel-ui
+  name_template: '{{.ProjectName}} {{.Tag}}'
+  header: |
+    ## Cloudflare Tunnel UI {{.Tag}} ({{.Date}})
+
+    Manage Cloudflare Tunnels through a modern, enterprise-grade web UI.
+
+    > 📦 Docker image available on [GHCR](https://ghcr.io/{{ .Env.GITHUB_REPOSITORY }})
+  footer: |
+    ---
+    **Full Changelog**: https://github.com/{{ .Env.GITHUB_REPOSITORY }}/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+    ### Install
+
+    **Linux/macOS**
+    ```bash
+    curl -Lo cloudflare-tunnel-ui.tar.gz \
+      https://github.com/{{ .Env.GITHUB_REPOSITORY }}/releases/download/{{ .Tag }}/cloudflare-tunnel-ui_{{ .Version }}_Linux_x86_64.tar.gz
+    tar xzf cloudflare-tunnel-ui.tar.gz
+    ./cloudflare-tunnel-ui
+    ```
+
+    **Docker**
+    ```bash
+    docker pull ghcr.io/{{ .Env.GITHUB_REPOSITORY }}:{{ .Tag }}
+    ```
+
+sboms:
+  - artifacts: archive
+
+signs:
+  - cmd: cosign
+    certificate: '${artifact}.pem'
+    args:
+      - sign-blob
+      - '--output-certificate=${certificate}'
+      - '--output-signature=${signature}'
+      - '${artifact}'
+      - '--yes'
+    artifacts: checksum
+    output: true
