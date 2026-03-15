@@ -1,5 +1,5 @@
 # ─── Stage 1: Build frontend ──────────────────────────────────────────────────
-FROM node:24-alpine AS frontend
+FROM node:25-alpine AS frontend
 WORKDIR /app/web
 
 # Install pnpm
