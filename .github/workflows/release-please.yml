@@ -47,4 +47,7 @@ jobs:
               repo:  context.repo.repo,
               workflow_id: 'release.yml',
               ref: '${{ needs.release-please.outputs.tag_name }}',
+              inputs: {
+                tag: '${{ needs.release-please.outputs.tag_name }}',
+              },
             })

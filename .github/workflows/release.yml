@@ -9,7 +9,7 @@ on:
     inputs:
       tag:
         description: 'Tag to release (e.g. v1.2.3)'
-        required: true
+        required: false
 
 permissions:
   contents: write
@@ -20,14 +20,31 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  # ── Resolve the effective tag across all trigger types ───────────────────────
+  resolve:
+    name: Resolve Tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.t.outputs.tag }}
+    steps:
+      - name: Determine tag
+        id: t
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="${{ github.ref_name }}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
   # ── Build frontend once and share as artifact ────────────────────────────────
   build-frontend:
     name: Build Frontend
     runs-on: ubuntu-latest
+    needs: resolve
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          ref: ${{ needs.resolve.outputs.tag }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -59,12 +76,12 @@ jobs:
   goreleaser:
     name: GoReleaser
     runs-on: ubuntu-latest
-    needs: build-frontend
+    needs: [resolve, build-frontend]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          ref: ${{ needs.resolve.outputs.tag }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -91,11 +108,11 @@ jobs:
   docker:
     name: Docker → GHCR
     runs-on: ubuntu-latest
-    needs: build-frontend
+    needs: [resolve, build-frontend]
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          ref: ${{ needs.resolve.outputs.tag }}
 
       - name: Download frontend dist
         uses: actions/download-artifact@v4
@@ -122,11 +139,11 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{version}},value=${{ needs.resolve.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.resolve.outputs.tag }}
+            type=semver,pattern={{major}},value=${{ needs.resolve.outputs.tag }}
             type=sha,prefix=sha-,format=short
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -140,7 +157,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            VERSION=${{ github.ref_name }}
+            VERSION=${{ needs.resolve.outputs.tag }}
             COMMIT=${{ github.sha }}
             BUILDDATE=${{ github.event.repository.updated_at }}
 
@@ -148,7 +165,7 @@ jobs:
   release-notes:
     name: Update Release Notes
     runs-on: ubuntu-latest
-    needs: [goreleaser, docker]
+    needs: [resolve, goreleaser, docker]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -159,7 +176,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const tag = context.ref.replace('refs/tags/', '')
+            const tag = '${{ needs.resolve.outputs.tag }}'
             const repo = context.repo
             const releases = await github.rest.repos.listReleases({ owner: repo.owner, repo: repo.repo })
             const rel = releases.data.find(r => r.tag_name === tag)
