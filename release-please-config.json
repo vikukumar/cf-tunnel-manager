@@ -10,11 +10,7 @@
       "include-component-in-tag": false,
       "tag-separator": "",
       "extra-files": [
-        {
-          "type": "generic",
-          "path": "internal/version/version.go",
-          "search-by-regex": true
-        }
+        "VERSION"
       ]
     }
   },
