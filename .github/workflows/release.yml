@@ -103,6 +103,7 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_REPO_NAME: ${{ github.event.repository.name }}
 
   # ── Docker image → GHCR ─────────────────────────────────────────────────────
   docker:
