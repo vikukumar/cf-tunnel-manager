@@ -1,17 +1,6 @@
-# ─── Stage 1: Build frontend ──────────────────────────────────────────────────
-FROM node:25-alpine AS frontend
-WORKDIR /app/web
-
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-COPY web/package.json web/pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
-
-COPY web/ ./
-RUN pnpm run build
-
-# ─── Stage 2: Build Go binary ─────────────────────────────────────────────────
+# ─── Stage 1: Build Go binary ─────────────────────────────────────────────────
+# The frontend (cmd/server/web/dist/) is pre-built by CI and present in the
+# build context, so no Node stage is needed here.
 FROM golang:1.26-alpine AS builder
 
 ARG VERSION=dev
@@ -25,8 +14,6 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-# Copy built frontend so the Go embed picks it up
-COPY --from=frontend /app/cmd/server/web/dist ./cmd/server/web/dist
 
 RUN go build \
     -ldflags="-s -w \
@@ -35,7 +22,7 @@ RUN go build \
       -X 'github.com/vikukumar/cf-tunnel-manager/internal/version.BuildDate=${BUILDDATE}'" \
     -o /bin/cloudflare-tunnel-ui ./cmd/server
 
-# ─── Stage 3: Minimal runtime image ──────────────────────────────────────────
+# ─── Stage 2: Minimal runtime image ──────────────────────────────────────────
 FROM gcr.io/distroless/static-debian12:nonroot
 
 LABEL org.opencontainers.image.title="Cloudflare Tunnel UI" \

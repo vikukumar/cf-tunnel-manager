@@ -25,7 +25,7 @@ jobs:
     outputs:
       bootstrapped: ${{ steps.b.outputs.bootstrapped }}
     steps:
-      - name: Create v1.0.0 release if none exists
+      - name: Bootstrap or re-dispatch if release has no binary assets
         id: b
         uses: actions/github-script@v7
         with:
@@ -34,44 +34,48 @@ jobs:
             const { data: releases } = await github.rest.repos.listReleases({
               owner: context.repo.owner, repo: context.repo.repo, per_page: 1
             })
-            if (releases.length > 0) {
-              console.log('Releases already exist, skipping bootstrap')
-              core.setOutput('bootstrapped', 'false')
-              return
-            }
-            const { data: branch } = await github.rest.repos.getBranch({
-              owner: context.repo.owner, repo: context.repo.repo, branch: 'main'
-            })
-            try {
-              await github.rest.git.createRef({
-                owner: context.repo.owner, repo: context.repo.repo,
-                ref: 'refs/tags/v1.0.0', sha: branch.commit.sha
-              })
-            } catch (e) {
-              if (!e.message?.includes('already exists')) throw e
-            }
-            await github.rest.repos.createRelease({
-              owner: context.repo.owner, repo: context.repo.repo,
-              tag_name: 'v1.0.0',
-              name: 'cloudflare-tunnel-ui v1.0.0',
-              body: '## Initial Release\n\nFirst public release of Cloudflare Tunnel UI.',
-              draft: false, prerelease: false
-            })
-            core.setOutput('bootstrapped', 'true')
-            console.log('Bootstrap: created v1.0.0 release and tag')
 
-      - name: Trigger release workflow for v1.0.0
-        if: steps.b.outputs.bootstrapped == 'true'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
+            let tagName = 'v1.0.0'
+
+            if (releases.length === 0) {
+              // No releases at all — create the initial tag so goreleaser can publish
+              const { data: branch } = await github.rest.repos.getBranch({
+                owner: context.repo.owner, repo: context.repo.repo, branch: 'main'
+              })
+              try {
+                await github.rest.git.createRef({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  ref: 'refs/tags/v1.0.0', sha: branch.commit.sha
+                })
+                console.log('Bootstrap: created tag v1.0.0')
+              } catch (e) {
+                if (!e.message?.includes('already exists')) throw e
+                console.log('Bootstrap: tag v1.0.0 already exists')
+              }
+              // Do NOT create the GitHub Release here — let goreleaser do it with full artifacts
+            } else {
+              tagName = releases[0].tag_name
+              // Check if the latest release has real binary assets
+              const binaryAssets = releases[0].assets.filter(a =>
+                a.name.endsWith('.tar.gz') || a.name.endsWith('.zip') || a.name === 'checksums.txt'
+              )
+              if (binaryAssets.length > 0) {
+                console.log(`Release ${tagName} already has ${binaryAssets.length} asset(s) — nothing to do`)
+                core.setOutput('bootstrapped', 'false')
+                return
+              }
+              console.log(`Release ${tagName} exists but has no binary assets — re-dispatching goreleaser`)
+            }
+
+            // Dispatch release.yml to build binaries + docker for this tag
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner, repo: context.repo.repo,
               workflow_id: 'release.yml',
-              ref: 'v1.0.0',
-              inputs: { tag: 'v1.0.0' }
+              ref: tagName,
+              inputs: { tag: tagName }
             })
+            core.setOutput('bootstrapped', 'true')
+            console.log(`Dispatched release.yml for ${tagName}`)
 
   # ── Release Please: ongoing version bumps from conventional commits ─────────
   release-please:

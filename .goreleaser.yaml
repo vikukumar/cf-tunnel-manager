@@ -47,7 +47,7 @@ archives:
       {{- if .Arm }}v{{ .Arm }}{{ end }}
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - README.md
 
@@ -85,7 +85,9 @@ changelog:
 release:
   github:
     owner: '{{ .Env.GITHUB_REPOSITORY_OWNER }}'
-    name: cloudflare-tunnel-ui
+    name: '{{ index (splitList "/" .Env.GITHUB_REPOSITORY) 1 }}'
+  replace_existing_draft: true
+  replace_existing_artifacts: true
   name_template: '{{.ProjectName}} {{.Tag}}'
   header: |
     ## Cloudflare Tunnel UI {{.Tag}} ({{.Date}})
