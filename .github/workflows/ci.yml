@@ -39,7 +39,8 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.64.8
-          args: --timeout=5m --go=1.24
+          install-mode: goinstall
+          args: --timeout=5m
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
