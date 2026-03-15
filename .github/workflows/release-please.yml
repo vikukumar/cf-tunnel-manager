@@ -35,27 +35,16 @@ jobs:
               owner: context.repo.owner, repo: context.repo.repo, per_page: 1
             })
 
+            // Get current HEAD of main
+            const { data: branch } = await github.rest.repos.getBranch({
+              owner: context.repo.owner, repo: context.repo.repo, branch: 'main'
+            })
+            const headSha = branch.commit.sha
+
             let tagName = 'v1.0.0'
 
-            if (releases.length === 0) {
-              // No releases at all — create the initial tag so goreleaser can publish
-              const { data: branch } = await github.rest.repos.getBranch({
-                owner: context.repo.owner, repo: context.repo.repo, branch: 'main'
-              })
-              try {
-                await github.rest.git.createRef({
-                  owner: context.repo.owner, repo: context.repo.repo,
-                  ref: 'refs/tags/v1.0.0', sha: branch.commit.sha
-                })
-                console.log('Bootstrap: created tag v1.0.0')
-              } catch (e) {
-                if (!e.message?.includes('already exists')) throw e
-                console.log('Bootstrap: tag v1.0.0 already exists')
-              }
-              // Do NOT create the GitHub Release here — let goreleaser do it with full artifacts
-            } else {
+            if (releases.length > 0) {
               tagName = releases[0].tag_name
-              // Check if the latest release has real binary assets
               const binaryAssets = releases[0].assets.filter(a =>
                 a.name.endsWith('.tar.gz') || a.name.endsWith('.zip') || a.name === 'checksums.txt'
               )
@@ -64,7 +53,27 @@ jobs:
                 core.setOutput('bootstrapped', 'false')
                 return
               }
-              console.log(`Release ${tagName} exists but has no binary assets — re-dispatching goreleaser`)
+              console.log(`Release ${tagName} exists but has no binary assets — will re-build`)
+            }
+
+            // Force-move (or create) the tag to the current main HEAD so the
+            // release workflow checks out code with all the latest fixes.
+            try {
+              await github.rest.git.updateRef({
+                owner: context.repo.owner, repo: context.repo.repo,
+                ref: `tags/${tagName}`,
+                sha: headSha,
+                force: true
+              })
+              console.log(`Tag ${tagName} moved to HEAD (${headSha})`)
+            } catch (e) {
+              // Tag doesn't exist yet — create it
+              await github.rest.git.createRef({
+                owner: context.repo.owner, repo: context.repo.repo,
+                ref: `refs/tags/${tagName}`,
+                sha: headSha
+              })
+              console.log(`Tag ${tagName} created at HEAD (${headSha})`)
             }
 
             // Dispatch release.yml to build binaries + docker for this tag
