@@ -24,10 +24,10 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -36,7 +36,7 @@ jobs:
         run: mkdir -p cmd/server/web/dist && printf '<!DOCTYPE html><html><body></body></html>\n' > cmd/server/web/dist/index.html
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v1.64.8
           install-mode: goinstall
@@ -49,7 +49,7 @@ jobs:
           run_install: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -68,10 +68,10 @@ jobs:
     name: Test (Go)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -83,7 +83,7 @@ jobs:
         run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./coverage.out
           fail_ci_if_error: false
@@ -109,10 +109,10 @@ jobs:
             goarch: amd64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -124,7 +124,7 @@ jobs:
           run_install: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -152,7 +152,7 @@ jobs:
           go build -ldflags="${LDFLAGS}" -o "bin/cloudflare-tunnel-ui-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}" ./cmd/server
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: binary-${{ matrix.goos }}-${{ matrix.goarch }}
           path: bin/
@@ -166,7 +166,7 @@ jobs:
     permissions:
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Trivy
         run: |
