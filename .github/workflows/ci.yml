@@ -43,7 +43,7 @@ jobs:
           args: --timeout=5m
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: latest
           run_install: false
@@ -118,7 +118,7 @@ jobs:
           cache: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: latest
           run_install: false
