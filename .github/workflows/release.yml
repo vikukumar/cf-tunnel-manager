@@ -47,7 +47,7 @@ jobs:
           ref: ${{ needs.resolve.outputs.tag }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           version: latest
           run_install: false
