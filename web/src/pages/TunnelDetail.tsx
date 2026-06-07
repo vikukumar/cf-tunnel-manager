@@ -32,6 +32,7 @@ interface AdvancedOptions {
   tlsTimeout: string; tcpKeepAlive: string; keepAliveConnections: string
   keepAliveTimeout: string; proxyAddress: string; proxyPort: string; proxyType: string
   caPool: string; clientCertificate: string
+  matchSniToHost: boolean
 }
 
 const DEFAULT_ADV: AdvancedOptions = {
@@ -41,6 +42,7 @@ const DEFAULT_ADV: AdvancedOptions = {
   tlsTimeout: '', tcpKeepAlive: '', keepAliveConnections: '',
   keepAliveTimeout: '', proxyAddress: '', proxyPort: '', proxyType: '',
   caPool: '', clientCertificate: '',
+  matchSniToHost: false,
 }
 
 function buildOriginRequest(adv: AdvancedOptions): OriginRequest | undefined {
@@ -52,7 +54,7 @@ function buildOriginRequest(adv: AdvancedOptions): OriginRequest | undefined {
   if (adv.noHappyEyeballs)        or.noHappyEyeballs        = true
   if (adv.bastionMode)            or.bastionMode            = true
   if (adv.httpHostHeader)         or.httpHostHeader         = adv.httpHostHeader
-  if (adv.originServerName)       or.originServerName       = adv.originServerName
+  if (!adv.matchSniToHost && adv.originServerName) or.originServerName = adv.originServerName
   if (adv.connectTimeout)         or.connectTimeout         = adv.connectTimeout
   if (adv.tlsTimeout)             or.tlsTimeout             = adv.tlsTimeout
   if (adv.tcpKeepAlive)           or.tcpKeepAlive           = adv.tcpKeepAlive
@@ -134,6 +136,7 @@ function AdvancedAccordion({ adv, setA }: {
             <div className="space-y-3">
               <Checkbox label="Skip TLS verification (noTLSVerify)" helpText="Disable cert checks - for self-signed origins." checked={adv.noTLSVerify} onChange={e => setA('noTLSVerify', e.target.checked)} />
               <Input label="TLS SNI hostname" placeholder="internal.example.com" value={adv.originServerName} onChange={e => setA('originServerName', e.target.value)} helpText="Override SNI for cert validation." />
+              <Checkbox label="Match SNI to Host" helpText="Automatically set SNI to the incoming request hostname." checked={adv.matchSniToHost} onChange={e => setA('matchSniToHost', e.target.checked)} />
               <Input label="TLS handshake timeout" placeholder="10s" value={adv.tlsTimeout} onChange={e => setA('tlsTimeout', e.target.value)} />
               <Input label="CA certificate pool path" placeholder="/etc/ssl/certs/ca-bundle.pem" value={adv.caPool} onChange={e => setA('caPool', e.target.value)} helpText="Path to CA certificate bundle for custom certificate authorities." />
               <Input label="Client certificate path" placeholder="/etc/ssl/certs/client.pem" value={adv.clientCertificate} onChange={e => setA('clientCertificate', e.target.value)} helpText="Path to client certificate for mTLS." />
@@ -327,6 +330,7 @@ function EditHostnameModal({ rule, onClose, tunnelId }: { rule: IngressRule | nu
         noTLSVerify: !!or.noTLSVerify, http2Origin: !!or.http2Origin, http3Origin: !!or.http3Origin,
         disableChunkedEncoding: !!or.disableChunkedEncoding, noHappyEyeballs: !!or.noHappyEyeballs, bastionMode: !!or.bastionMode,
         httpHostHeader: or.httpHostHeader ?? '', originServerName: or.originServerName ?? '',
+        matchSniToHost: !(or.originServerName && or.originServerName !== ''),
         connectTimeout: or.connectTimeout ?? '', tlsTimeout: or.tlsTimeout ?? '',
         tcpKeepAlive: or.tcpKeepAlive ?? '', keepAliveConnections: or.keepAliveConnections?.toString() ?? '',
         keepAliveTimeout: or.keepAliveTimeout ?? '', proxyAddress: or.proxyAddress ?? '',
