@@ -99,6 +99,8 @@ type OriginRequest struct {
 	ProxyType              string    `json:"proxyType,omitempty"`
 	HTTP2Origin            *bool     `json:"http2Origin,omitempty"`
 	HTTP3Origin            *bool     `json:"http3Origin,omitempty"`
+	CAPool                 string    `json:"caPool,omitempty"`
+	ClientCertificate      string    `json:"clientCertificate,omitempty"`
 }
 
 // Duration is a wrapper for time.Duration that marshals as seconds for the CF API.
@@ -234,8 +236,10 @@ func (s *Service) AddIngressRule(ctx context.Context, tunnelID string, rule Ingr
 	return s.UpdateTunnelConfig(ctx, tunnelID, cfg)
 }
 
-// RemoveIngressRule removes a hostname from a tunnel's ingress rules.
-func (s *Service) RemoveIngressRule(ctx context.Context, tunnelID, hostname string) (*TunnelConfig, error) {
+// RemoveIngressRule removes a specific ingress rule by hostname, service, and path combination.
+// This ensures that when multiple routes share the same hostname but have different
+// services or paths (e.g., wss:// and https://), only the correct one is deleted.
+func (s *Service) RemoveIngressRule(ctx context.Context, tunnelID, hostname, service, path string) (*TunnelConfig, error) {
 	existing, err := s.GetTunnelConfig(ctx, tunnelID)
 	if err != nil {
 		return nil, err
@@ -243,9 +247,12 @@ func (s *Service) RemoveIngressRule(ctx context.Context, tunnelID, hostname stri
 
 	var rules []IngressRule
 	for _, r := range existing.Config.Ingress {
-		if r.Hostname != hostname {
-			rules = append(rules, r)
+		// Only skip rules that match ALL three: hostname, service, and path
+		// This allows multiple routes with same hostname but different services/paths
+		if r.Hostname == hostname && r.Service == service && r.Path == path {
+			continue // Skip this rule (it's the one being deleted)
 		}
+		rules = append(rules, r)
 	}
 	// Ensure catch-all at end
 	rules = filterNonCatchAll(rules)

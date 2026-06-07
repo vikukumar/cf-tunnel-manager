@@ -65,6 +65,8 @@ export interface OriginRequest {
   disableChunkedEncoding?: boolean
   httpHostHeader?: string
   originServerName?: string
+  caPool?: string                // Path to CA certificate file
+  clientCertificate?: string     // Path to client certificate file
 }
 
 export interface IngressRule {

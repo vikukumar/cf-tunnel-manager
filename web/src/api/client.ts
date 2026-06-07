@@ -80,8 +80,11 @@ export const tunnelsApi = {
     origin_request?: OriginRequest
   }) => post<TunnelConfig>(`/tunnels/${id}/ingress`, params),
 
-  removeIngress: (id: string, hostname: string) =>
-    del<TunnelConfig>(`/tunnels/${id}/ingress/${encodeURIComponent(hostname)}`),
+  removeIngress: (id: string, hostname: string, service: string, path?: string) => {
+    const params = new URLSearchParams({ service })
+    if (path) params.append('path', path)
+    return del<TunnelConfig>(`/tunnels/${id}/ingress/${encodeURIComponent(hostname)}?${params.toString()}`)
+  },
 
   listRoutes: (id: string) => get<NetworkRoute[]>(`/tunnels/${id}/routes`),
 

@@ -31,6 +31,7 @@ interface AdvancedOptions {
   httpHostHeader: string; originServerName: string; connectTimeout: string
   tlsTimeout: string; tcpKeepAlive: string; keepAliveConnections: string
   keepAliveTimeout: string; proxyAddress: string; proxyPort: string; proxyType: string
+  caPool: string; clientCertificate: string
 }
 
 const DEFAULT_ADV: AdvancedOptions = {
@@ -39,6 +40,7 @@ const DEFAULT_ADV: AdvancedOptions = {
   httpHostHeader: '', originServerName: '', connectTimeout: '',
   tlsTimeout: '', tcpKeepAlive: '', keepAliveConnections: '',
   keepAliveTimeout: '', proxyAddress: '', proxyPort: '', proxyType: '',
+  caPool: '', clientCertificate: '',
 }
 
 function buildOriginRequest(adv: AdvancedOptions): OriginRequest | undefined {
@@ -59,6 +61,8 @@ function buildOriginRequest(adv: AdvancedOptions): OriginRequest | undefined {
   if (adv.proxyAddress)           or.proxyAddress           = adv.proxyAddress
   if (adv.proxyPort)              or.proxyPort              = parseInt(adv.proxyPort)
   if (adv.proxyType)              or.proxyType              = adv.proxyType
+  if (adv.caPool)                 or.caPool                 = adv.caPool
+  if (adv.clientCertificate)      or.clientCertificate      = adv.clientCertificate
   return Object.keys(or).length > 0 ? or : undefined
 }
 
@@ -131,6 +135,8 @@ function AdvancedAccordion({ adv, setA }: {
               <Checkbox label="Skip TLS verification (noTLSVerify)" helpText="Disable cert checks - for self-signed origins." checked={adv.noTLSVerify} onChange={e => setA('noTLSVerify', e.target.checked)} />
               <Input label="TLS SNI hostname" placeholder="internal.example.com" value={adv.originServerName} onChange={e => setA('originServerName', e.target.value)} helpText="Override SNI for cert validation." />
               <Input label="TLS handshake timeout" placeholder="10s" value={adv.tlsTimeout} onChange={e => setA('tlsTimeout', e.target.value)} />
+              <Input label="CA certificate pool path" placeholder="/etc/ssl/certs/ca-bundle.pem" value={adv.caPool} onChange={e => setA('caPool', e.target.value)} helpText="Path to CA certificate bundle for custom certificate authorities." />
+              <Input label="Client certificate path" placeholder="/etc/ssl/certs/client.pem" value={adv.clientCertificate} onChange={e => setA('clientCertificate', e.target.value)} helpText="Path to client certificate for mTLS." />
             </div>
           </div>
           <div>
@@ -325,6 +331,7 @@ function EditHostnameModal({ rule, onClose, tunnelId }: { rule: IngressRule | nu
         tcpKeepAlive: or.tcpKeepAlive ?? '', keepAliveConnections: or.keepAliveConnections?.toString() ?? '',
         keepAliveTimeout: or.keepAliveTimeout ?? '', proxyAddress: or.proxyAddress ?? '',
         proxyPort: or.proxyPort?.toString() ?? '', proxyType: or.proxyType ?? '',
+        caPool: or.caPool ?? '', clientCertificate: or.clientCertificate ?? '',
       })
     }
   }, [rule])
@@ -336,8 +343,10 @@ function EditHostnameModal({ rule, onClose, tunnelId }: { rule: IngressRule | nu
     mutationFn: async () => {
       const cached = qc.getQueryData<any>(['tunnel-config', tunnelId])
       if (!cached) throw new Error('Config not loaded — please try again')
+      // Match on hostname + service + path to ensure we update the correct rule
+      // This prevents updating the wrong rule when multiple routes share the same hostname
       const updatedIngress = (cached.config.ingress ?? []).map((r: IngressRule) =>
-        r.hostname === rule!.hostname
+        r.hostname === rule!.hostname && r.service === rule!.service && r.path === rule!.path
           ? { ...r, service: svc, path: path || undefined, originRequest: buildOriginRequest(adv) }
           : r
       )
@@ -452,6 +461,8 @@ function OriginBadges({ or }: { or?: OriginRequest }) {
   if (or.http3Origin)            badges.push({ label: 'HTTP/3',   color: 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400' })
   if (or.bastionMode)            badges.push({ label: 'bastion',  color: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400' })
   if (or.disableChunkedEncoding) badges.push({ label: 'no-chunk', color: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400' })
+  if (or.caPool)                 badges.push({ label: 'CA pool',  color: 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400' })
+  if (or.clientCertificate)      badges.push({ label: 'mTLS',     color: 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400' })
   if (or.proxyType)              badges.push({ label: or.proxyType, color: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400' })
   if (!badges.length) return null
   return (
@@ -689,7 +700,7 @@ function AppRoutesTab({ ingress, tunnelId, loading, onAdd, onSave }: {
   }, [])
 
   const removeIngress = useMutation({
-    mutationFn: (hostname: string) => tunnelsApi.removeIngress(tunnelId, hostname),
+    mutationFn: (rule: IngressRule) => tunnelsApi.removeIngress(tunnelId, rule.hostname!, rule.service, rule.path),
     onSuccess: () => { toast.success('Route removed'); qc.invalidateQueries({ queryKey: ['tunnel-config', tunnelId] }) },
     onError: (e: Error) => toast.error(`Remove failed: ${e.message}`),
   })
@@ -756,7 +767,7 @@ function AppRoutesTab({ ingress, tunnelId, loading, onAdd, onSave }: {
           <button onClick={() => setEditRule(rule)} className="p-1.5 rounded-lg text-gray-400 hover:text-[#F6821F] hover:bg-orange-50 dark:hover:bg-orange-950/40 transition-all" title="Edit">
             <Pencil className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => removeIngress.mutate(rule.hostname!)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all" title="Remove">
+          <button onClick={() => removeIngress.mutate(rule)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all" title="Remove">
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>

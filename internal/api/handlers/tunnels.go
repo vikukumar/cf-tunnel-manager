@@ -151,13 +151,19 @@ func (h *TunnelHandler) AddIngress(c echo.Context) error {
 	return c.JSON(http.StatusCreated, successResponse(cfg))
 }
 
-// RemoveIngress removes a hostname ingress rule from a tunnel.
-// DELETE /api/tunnels/:id/ingress/:hostname
+// RemoveIngress removes a specific ingress rule by hostname, service, and path.
+// DELETE /api/tunnels/:id/ingress/:hostname (with query params service and path)
 func (h *TunnelHandler) RemoveIngress(c echo.Context) error {
 	id := c.Param("id")
 	hostname := c.Param("hostname")
+	service := c.QueryParam("service")
+	path := c.QueryParam("path")
 
-	cfg, err := h.cf.RemoveIngressRule(c.Request().Context(), id, hostname)
+	if service == "" {
+		return apiError(c, http.StatusBadRequest, "Missing required query parameter: service", nil)
+	}
+
+	cfg, err := h.cf.RemoveIngressRule(c.Request().Context(), id, hostname, service, path)
 	if err != nil {
 		return apiError(c, http.StatusBadGateway, "Failed to remove ingress rule", err)
 	}
