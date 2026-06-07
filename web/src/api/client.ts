@@ -59,6 +59,7 @@ const del  = <T>(path: string, body?: unknown) => request<T>('DELETE', path, bod
 // --- Auth ----------------------------------------------------------------------
 export const authApi = {
   me: () => get<UserInfo>('/auth/me'),
+  info: () => get<{ team_domain?: string; enabled: boolean }>('/auth/info'),
 }
 
 // --- Tunnels -------------------------------------------------------------------

@@ -168,7 +168,7 @@ export default function Layout() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">{user?.email ?? ' - '}</p>
-              <p className="text-xs text-gray-400">Authenticated</p>
+              <p className="text-xs text-gray-400">{user && user.email && user.email !== 'anonymous' ? 'Authenticated' : 'Not authenticated'}</p>
             </div>
           </div>
         </div>

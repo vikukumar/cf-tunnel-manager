@@ -1,17 +1,27 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
 import Dashboard from './pages/Dashboard'
 import TunnelsList from './pages/TunnelsList'
 import TunnelDetail from './pages/TunnelDetail'
 import CreateTunnel from './pages/CreateTunnel'
 import ZonesDNS from './pages/ZonesDNS'
 import PrivateRoutes from './pages/PrivateRoutes'
+import Login from './pages/Login'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout />}>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="tunnels" element={<TunnelsList />} />
           <Route path="tunnels/new" element={<CreateTunnel />} />

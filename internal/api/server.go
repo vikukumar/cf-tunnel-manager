@@ -85,6 +85,13 @@ func NewServer(cfg *config.Config, staticFS fs.FS) *Server {
 	// Auth
 	api.GET("/auth/me", handlers.Me)
 
+	// Expose small auth info for frontend to construct login/logout URLs
+	api.GET("/auth/info", func(c echo.Context) error {
+		team := cfg.Auth.CloudflareAccess.TeamDomain
+		data := map[string]interface{}{"team_domain": team, "enabled": cfg.Auth.CloudflareAccess.Enabled}
+		return c.JSON(http.StatusOK, map[string]interface{}{"success": true, "data": data})
+	})
+
 	// Zones
 	zoneHandler := handlers.NewZoneHandler(cf, logger)
 	api.GET("/zones", zoneHandler.ListZones)
