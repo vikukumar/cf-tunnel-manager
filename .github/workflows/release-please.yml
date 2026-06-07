@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Bootstrap or re-dispatch if release has no binary assets
         id: b
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -97,7 +97,7 @@ jobs:
       version:         ${{ steps.rp.outputs.version }}
 
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         id: rp
         with:
           config-file:   release-please-config.json
@@ -112,7 +112,7 @@ jobs:
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
     steps:
       - name: Dispatch release workflow for tag ${{ needs.release-please.outputs.tag_name }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
