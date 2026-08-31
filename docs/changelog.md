@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0](https://github.com/vikukumar/cf-tunnel-manager/compare/v1.0.0...v1.1.0) (2026-08-31)
+
+
+### 🚀 Features
+
+* add matchSniToHost option and update build script for frontend dependencies ([7674d7e](https://github.com/vikukumar/cf-tunnel-manager/commit/7674d7ef0809033d9db706e077640fe903e7e868))
+* implement authentication flow with login page and protected routes ([7a5cd41](https://github.com/vikukumar/cf-tunnel-manager/commit/7a5cd4163810300b264791bd8456605c581bfc0f))
+
+
+### ♻️  Refactoring
+
+* enhance ingress rule management with service and path parameters ([8f588a7](https://github.com/vikukumar/cf-tunnel-manager/commit/8f588a75b9372be04642bc39b9923852220c8d88))
+
 ## [Unreleased]
 
 > Releases are created automatically by [release-please](https://github.com/googleapis/release-please) via Conventional Commits.
