@@ -1,7 +1,7 @@
 # ─── Stage 1: Build Go binary ─────────────────────────────────────────────────
 # The frontend (cmd/server/web/dist/) is pre-built by CI and present in the
 # build context, so no Node stage is needed here.
-FROM golang:1.26-alpine AS builder
+FROM golang:1.27-alpine AS builder
 
 ARG VERSION=dev
 ARG COMMIT=unknown
