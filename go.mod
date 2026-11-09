@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/gorilla/websocket v1.5.3
-	github.com/labstack/echo/v4 v4.16.2
+	github.com/labstack/echo/v4 v4.16.3
 	github.com/lestrrat-go/jwx/v2 v2.1.7
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/viper v1.21.0
